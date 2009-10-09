@@ -8,8 +8,8 @@
       var SoundOff = {
         swfLocation : 'soundoff.swf',
         containerID : '_soundOffContainer',
-        
-        container : null
+        container : null,
+        list : []
       };
       
       SoundOff.Object = function() {
@@ -33,14 +33,18 @@
         
         SoundOff.container.appendChild(fo);
         this.flashObj = fo;
-        var self = this;
         this.initializeTimer = setInterval(this.bind(this.isInitialized, this), 100);
+        SoundOff.list.push(this);
+        this.thisIndex = SoundOff.list.length - 1;
+        this.deferredCalls.push(['setUID', this.thisIndex]);
       }
       
       SoundOff.Object.prototype = {
         initialized : false,
         initializeTimer : null,
         deferredCalls : [],
+        events : {},
+        thisIndex : null,
         
         addToList : function(id, filePath) {
           this.call('addToList', arguments);
@@ -96,7 +100,7 @@
         /* Use this to get the value of a variable on the player. If the flash
           player is not initialized, this will return null.
           The only other solution that I could think of was to freeze the
-          browser with a loop until it became unavailable, but this would be
+          browser with a loop until it became available, but this would be
           bad if the player never initalized for some reason. */
         getVal : function(name) {
           if (this.initialized) {
@@ -104,7 +108,6 @@
           } else {
             return null;
           }
-          
         },
         
         /* for internal use only */
@@ -115,7 +118,15 @@
             clearInterval(this.initializeTimer);
             var i, a;
             for (var i=0; a = this.deferredCalls[i]; i++ ) {
-              this[a[0]](a[1], a[2]);
+              switch(a.length) {
+                case 2:
+                  this[a[0]](a[1]);
+                  break;
+                case 3:
+                  this[a[0]](a[1], a[2]);
+                  break;
+              }
+              
             }
           } catch(e) {}
         },
@@ -123,6 +134,40 @@
         /* for internal use only */
         bind : function (f, obj) {
           return function() { return f.apply(obj, arguments); };
+        },
+        
+        /* for internal use only */
+        setUID : function(uid) {
+          this.flashObj.uid(uid);
+        },
+        
+        addEvent : function(event, func) {
+          var i, e;
+          this.events[event] = this.events[event] || [];
+          for (i=0; e = this.events[event][i]; i++) { if (func === e) { return false; } }
+          this.events[event].push(func);
+          return true;
+        },
+        
+        removeEvent : function(event, func) {
+          var i, e;
+          this.events[event] = this.events[event] || [];
+          for (i=0; e = this.events[event][i]; i++) {
+            if (func === e) {
+              this.events[event].splice(i, 1);
+              break;
+            }
+          }
+        },
+        
+        dispatchEvent : function (event, obj) {
+          
+          console.info('Dispatching event: ' + event);
+          console.info(obj);
+          
+          var i, e;
+          this.events[event] = this.events[event] || [];
+          for (i=0; e = this.events[event][i]; i++) { e.apply(this, obj); }
         }
       };
       

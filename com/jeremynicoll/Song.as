@@ -4,12 +4,16 @@ package com.jeremynicoll {
   import flash.media.SoundTransform;
   import flash.media.SoundLoaderContext;
 
-  import flash.events.Event;
-  
   import flash.net.URLRequest;
   
   import flash.utils.Timer;
-  import flash.events.TimerEvent;  
+  
+  import flash.events.Event;
+  import flash.events.ProgressEvent;
+  import flash.events.TimerEvent;
+  
+  
+  
 
   
   public class Song extends Sound {
@@ -25,7 +29,9 @@ package com.jeremynicoll {
     private var fadeVolFrom:Number;
     private var fadeVolTo:Number;
     private var timer:Timer;
+    private var progressTimer:Timer;
 
+    private var loaded:Boolean = false;
     
     public function Song(uid:String = null, location:String = null):void {
       if(uid) { id = uid; }
@@ -34,10 +40,12 @@ package com.jeremynicoll {
         load(new URLRequest(location));
         loadInitialized = true;
       }
+      progressTimer = new Timer(250);
+      progressTimer.addEventListener(TimerEvent.TIMER, sendProgress);
+      progressTimer.start();
     }
     
     public function seek(pos:int):void {
-      trace("Seeking to " + pos);
       trackPos = pos;
       if (this.isPlaying) { play(pos); }
     }
@@ -45,11 +53,8 @@ package com.jeremynicoll {
     public override function play(newPos:Number = 0, loops:int = 0, transform:SoundTransform = null):SoundChannel {
       if (soundChannel) { soundChannel.stop(); }
       var st = transform || new SoundTransform(volume);
-      trace(trackPos);
       var pos:int = newPos == -1 ? trackPos : newPos;
-      trace("Playing at position "  + pos + ", volume "  + volume);
       soundChannel = super.play(pos, loops, st);
-      trace(soundChannel);
       isPlaying = true;
       soundChannel.addEventListener('soundComplete', songComplete);
       sendEvent(SongEvent.PLAY);
@@ -58,12 +63,12 @@ package com.jeremynicoll {
     
     public override function load(url:URLRequest, context:SoundLoaderContext = null):void {
       loadInitialized = true;
+      this.addEventListener('id3', sendID3);
       super.load(url, context);
     }
     
     public function pause():void {
       trackPos = soundChannel.position;
-      trace('Pausing at ' + trackPos);
       sendEvent(SongEvent.SOUND_STOP);
       sendEvent(SongEvent.PAUSE);
       realStop(false);
@@ -83,9 +88,17 @@ package com.jeremynicoll {
       return isPlaying;
     }
     
+    public function getSoundChannel():SoundChannel {
+      return soundChannel;
+    }
+    
     public function setVolume(vol:Number):void {
       if (soundChannel) soundChannel.soundTransform = new SoundTransform(vol);
       volume = vol;
+    }
+
+    public function getVolume():Number {
+      return volume;
     }
     
     public function fadeTo(vol:Number, seconds:int):void {
@@ -97,15 +110,9 @@ package com.jeremynicoll {
       timer.start();
     }
     
-    public function getVolume():Number {
-      return volume;
-    }
-    
     private function realStop(reset:Boolean):void {
       if (reset) { trackPos = 0; }
       isPlaying = false;
-      trace("stopping!");
-      trace(trackPos);
       soundChannel.stop();
     }
     
@@ -113,9 +120,10 @@ package com.jeremynicoll {
       sendEvent(SongEvent.COMPLETE);
     }
     
-    private function sendEvent(label) {
-      trace("New event: " + label);
-      dispatchEvent(new SongEvent(label));
+    private function sendEvent(label:String, attrs:Object = null) {
+      var se:SongEvent = new SongEvent(label, id);
+      se.merge(attrs);
+      dispatchEvent(se);
     }
     
     private function fade(e:TimerEvent):void {
@@ -123,6 +131,29 @@ package com.jeremynicoll {
       var diff = fadeVolFrom - fadeVolTo;
       var v = fadeVolFrom - diff * percent;
       setVolume(v);
+    }
+    
+    private function sendProgress(e:TimerEvent):void {
+      if (!loaded) {
+        sendEvent(SongEvent.LOAD, {
+          bytesLoaded : bytesLoaded,
+          bytesTotal : bytesTotal
+        });
+        if (bytesLoaded >= bytesTotal) { loaded = true; }
+      }
+      if (isPlaying) {
+        sendEvent(SongEvent.PROGRESS, {
+          leftPeak    : soundChannel.leftPeak,
+          rightPeak   : soundChannel.rightPeak,
+          position    : soundChannel.position,
+          length      : this.length,
+          isBuffering : this.isBuffering
+        });
+      }
+    }
+    
+    public function sendID3(e:Event = null):void {
+      sendEvent(SongEvent.ID3, this.id3);
     }
     
   }
