@@ -22,6 +22,7 @@
       ];
       
       $(function() {
+        $('#console').html(songs[0].title);
         var so = new SoundOff.Object(), i, song;
         
         for (i=0; song = songs[i]; i++) {
@@ -46,9 +47,15 @@
           $('#play').show();
         });
         
-        so.addListener('songID3', function(opts) {
+        /*so.addListener('songID3', function(opts) {
           $('#console').html(opts.TIT2);
-        });
+        });*/
+        
+        so.addListener('songPlay', function(opts) {
+          $('#pause').show();
+          $('#play').hide();
+          $('#console').html(songs[opts.songId].title);
+        })
         
         so.addListener('songProgress', function(opts) {
           if (!sliding) {
@@ -104,7 +111,7 @@
         $('#play').click(function() {
           $(this).hide();
           $('#pause').show();
-          so.play();
+          so.playAtPercent($('#progress-slider').slider('option', 'value'));
           return false;
         });
         
@@ -112,6 +119,7 @@
           $('#pause').hide();
           $('#play').show();
           so.stop();
+          $('#progress-slider').slider('option', 'value', 0);
         });
         
         $('#mute').click(function() {
@@ -132,7 +140,7 @@
     
     <style type="text/css">
       html, body {
-        padding: 0;
+        padding: 5px;
         margin: 0;
       }
       

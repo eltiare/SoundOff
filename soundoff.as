@@ -4,28 +4,10 @@ import com.jeremynicoll.SongEvent;
 var controller:SoundOff = new SoundOff();
 var uid;
 
-/*
-controller.addToList(1, 'songs/flying-high.mp3');
-controller.addToList(2, 'songs/suntorise.mp3');
-
-controller.play();
-
-
-var timer = new Timer(1000, 1);
-timer.addEventListener(TimerEvent.TIMER, pauseController);
-timer.start();
-
-function pauseController(e:Event) {
-  controller.seekToPercent(99);
-}*/
-
-
-
-
 var i:int, e:String;
 for (i=0; e = SongEvent.CONSTANTS[i]; i++) { controller.addEventListener(e, sendEvent); }
 
-//ExternalInterface.marshallExceptions = true;
+ExternalInterface.marshallExceptions = true;
 ExternalInterface.addCallback('call', eCall);
 ExternalInterface.addCallback('get', varGet);
 ExternalInterface.addCallback('set', varSet);

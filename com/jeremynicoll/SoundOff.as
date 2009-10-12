@@ -10,9 +10,15 @@ package com.jeremynicoll {  import com.jeremynicoll.Song;  import com.jeremyn
 
     public class SoundOff extends EventDispatcher {        public var fade:Boolean = false;    public var loop:Boolean = false;    public var fadeTime:int = 2;    public var currentIndex:int = 0;
         private var list:Array = [];        private var primaryPlayer:Song;    private var secondaryPlayer:Song;    
-    private var thisVolume:Number = 1;        public function addToList(uid, location:String):Boolean {      this.list.push({ 'id' : uid, 'location' : location });      return true;    }        public function removeFromList(uid):Boolean {      var hsh, index:int, i:int;      for (i = 0; hsh = this.list[i] ; i++) { if(hsh.id === uid) { index = i; } }      if (index) {        this.list.splice(index, 1);        return true;      } else {        return false;      }    }        public function play(pos = -1):void {      if (!pos && pos !== 0) { pos = -1; }
+    private var thisVolume:Number = 1;        public function addToList(uid, location:String):Boolean {      this.list.push({ 'id' : uid, 'location' : location });      return true;    }        public function removeFromList(uid):Boolean {      var hsh, index:int, i:int;      for (i = 0; hsh = this.list[i] ; i++) { if(hsh.id === uid) { index = i; } }      if (index) {        this.list.splice(index, 1);        return true;      } else {        return false;      }    }        public function play(pos = -1):void {
+      if (!pos && pos !== 0) { pos = -1; }
       loadCurrent();
       playThis(currentIndex, pos);    }
+    
+    public function playAtPercent(percent:Number):void {
+      loadCurrent();
+      playThis(currentIndex, (percent / 100) * primaryPlayer.length);
+    }
     
     public function seek(pos:int):void {
       primaryPlayer.seek(pos);
@@ -62,7 +68,7 @@ package com.jeremynicoll {  import com.jeremynicoll.Song;  import com.jeremyn
         secondaryPlayer.fadeTo(0, fadeTime);      } else {
         if (secondaryPlayer) { secondaryPlayer.stop();}
         primaryPlayer.setVolume(thisVolume);
-        primaryPlayer.play();      }      primaryPlayer.sendID3();      primaryPlayer.addEventListener(SongEvent.COMPLETE, songComplete);    }    
+        primaryPlayer.play(pos);      }      primaryPlayer.sendID3();      primaryPlayer.addEventListener(SongEvent.COMPLETE, songComplete);    }    
     private function loadCurrent():void {
       if (!(primaryPlayer && primaryPlayer.loadInitialized) || primaryPlayer.id != list[currentIndex].id) {
         var i, e;
@@ -73,7 +79,6 @@ package com.jeremynicoll {  import com.jeremynicoll.Song;  import com.jeremyn
         private function switchPlayers():void {      var sp = secondaryPlayer;      secondaryPlayer = primaryPlayer;      primaryPlayer = sp;    }
     
     private function songComplete(e:SongEvent) {
-      trace('Playing next!');
       if (loop || currentIndex != list.length - 1) playNext();
     }
     

@@ -30,7 +30,7 @@ package com.jeremynicoll {
     private var loaded:Boolean = false;
     
     public function Song(uid = null, location:String = null):void {
-      if (uid) { id = uid; }
+      if (uid !== null) { id = uid; }
       if(location) {
         this.location = location;
         load(new URLRequest(location));
@@ -48,7 +48,6 @@ package com.jeremynicoll {
     
     public function seekToPercent(percent:Number) {
       trackPos = length * (percent / 100.0);
-      trace('Seeking to: ' + trackPos)
       if (this.isPlaying) { play(trackPos); }
     }
     
@@ -119,7 +118,6 @@ package com.jeremynicoll {
     }
     
     private function songComplete(e:Event) {
-      trace("Song finished!");
       isPlaying = false;
       sendEvent(SongEvent.COMPLETE);
     }
@@ -148,7 +146,6 @@ package com.jeremynicoll {
       }
       
       if (isPlaying) {
-        trace(soundChannel.position, length);
         sendEvent(SongEvent.PROGRESS, {
           leftPeak    : soundChannel.leftPeak,
           rightPeak   : soundChannel.rightPeak,
@@ -161,9 +158,9 @@ package com.jeremynicoll {
     }
     
     public function sendID3(e:Event = null):void {
-      var o = [], v;
-      for (v in id3) { o[v] = id3[v];}
-      sendEvent(SongEvent.ID3, this.id3);
+      try {
+        sendEvent(SongEvent.ID3, id3);
+      } catch(e) {} // For security errors if cross-domain.
     }
     
   }

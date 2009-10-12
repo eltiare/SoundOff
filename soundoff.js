@@ -65,6 +65,10 @@ SoundOff.Object.prototype = {
     this.call('play', arguments);
   },
   
+  playAtPercent : function(pos) {
+    this.call('playAtPercent', arguments);
+  },
+  
   seek : function(pos) {
     this.call('seek', arguments);
   },
