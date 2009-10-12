@@ -60,12 +60,12 @@ SoundOff.Object.prototype = {
     this.call('removeFromList', arguments);
   },
   
-  play : function() {
+  play : function(pos) {
     if (arguments[0] === null) { arguments[0] = -1;}
     this.call('play', arguments);
   },
   
-  seek : function() {
+  seek : function(pos) {
     this.call('seek', arguments);
   },
   
@@ -94,7 +94,8 @@ SoundOff.Object.prototype = {
     var methodName = arguments[0];
     var i, args = [], a, ta;
     ta = typeof arguments[1] ==  'object' ? arguments[1] : arguments;
-    for (i = typeof arguments[1] ==  'object' ? 0 : 1; a = ta[i]; i++) { args.push(a); }
+    for (i = typeof arguments[1] ==  'object' ? 0 : 1; (a = ta[i]) !== undefined; i++) { args.push(a);}
+    
     if (this.initialized) {
       this.flashObj.call(methodName, args);
     } else {
@@ -132,6 +133,7 @@ SoundOff.Object.prototype = {
       clearInterval(this.initializeTimer);
       var i, a;
       for (var i=0; a = this.deferredCalls[i]; i++ ) {
+        console.info(a[0], a[1], a[2]);
         switch(a.length) {
           case 2:
             this[a[0]](a[1]);
