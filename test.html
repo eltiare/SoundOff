@@ -7,7 +7,7 @@
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="jquery.ui.js"></script>
 
-    <script src="sound_off.js"></script>
+    <script src="soundoff.js"></script>
     
     <script type="text/javascript">
       var sliding = false;
@@ -34,7 +34,6 @@
         });
         
         so.addListener('songID3', function(opts) {
-          console.info(opts);
           $('#console').html(opts.TIT2);
         });
         

@@ -25,7 +25,7 @@ package com.jeremynicoll {
       LOAD
     ];
     
-    public var attrs:Array = [];
+    public var attrs:Object = {};
     
     private var label:String;
     

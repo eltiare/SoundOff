@@ -5,7 +5,7 @@ var controller:SoundOff = new SoundOff();
 var uid;
 
 
-controller.addToList('1', 'songs/flying-high.mp3');
+/*controller.addToList('1', 'songs/flying-high.mp3');
 controller.addToList('2', 'songs/suntorise.mp3');
 
 controller.play();
@@ -17,7 +17,7 @@ timer.start();
 
 function pauseController(e:Event) {
   controller.seekToPercent(99);
-}
+}*/
 
 
 
