@@ -10,7 +10,7 @@ package com.jeremynicoll {  import com.jeremynicoll.Song;  import com.jeremyn
 
     public class SoundOff extends EventDispatcher {        public var fade:Boolean = false;    public var loop:Boolean = false;    public var fadeTime:int = 2;    public var currentIndex:int = 0;
         private var list:Array = [];        private var primaryPlayer:Song;    private var secondaryPlayer:Song;    
-    private var thisVolume:Number = 1;        public function addToList(uid:String, location:String):Boolean {      this.list.push({ 'id' : uid, 'location' : location });      return true;    }        public function removeFromList(uid:String):Boolean {      var hsh, index:int, i:int;      for (i = 0; hsh = this.list[i] ; i++) { if(hsh.id === uid) { index = i; } }      if (index) {        this.list.splice(index, 1);        return true;      } else {        return false;      }    }        public function play(pos = -1):void {      if (pos === null) { pos = -1; }
+    private var thisVolume:Number = 1;        public function addToList(uid, location:String):Boolean {      this.list.push({ 'id' : uid, 'location' : location });      return true;    }        public function removeFromList(uid):Boolean {      var hsh, index:int, i:int;      for (i = 0; hsh = this.list[i] ; i++) { if(hsh.id === uid) { index = i; } }      if (index) {        this.list.splice(index, 1);        return true;      } else {        return false;      }    }        public function play(pos = -1):void {      if (!pos && pos !== 0) { pos = -1; }
       loadCurrent();
       playThis(currentIndex, pos);    }
     
@@ -20,13 +20,34 @@ package com.jeremynicoll {  import com.jeremynicoll.Song;  import com.jeremyn
     
     public function seekToPercent(percent:Number):void {
       primaryPlayer.seekToPercent(percent);
-    }        public function pause():void {      primaryPlayer.pause();    }        public function stop():void {      primaryPlayer.stop();    }        public function playPrev():void {      playThis(currentIndex == 0 ? list.length - 1 : currentIndex - 1);    }        public function playNext():void {
+    }        public function pause():void {      primaryPlayer.pause();    }        public function stop():void {      primaryPlayer.stop();    }    
+    public function playIndex(index:int):Boolean {
+      playThis(index);
+      return true;
+    }
+    
+    public function playUID(uid):Boolean {
+      var index = indexByUID(uid);
+      if (index) {
+        playThis(index);
+        return true;
+      } else {
+        return false;
+      }
+    }
+        public function playPrev():void {      playThis(currentIndex == 0 ? list.length - 1 : currentIndex - 1);    }        public function playNext():void {
       playThis(currentIndex == list.length - 1 ? 0 : currentIndex + 1);    }        public function set volume(vol:Number):void {      thisVolume = vol;
-      primaryPlayer.setVolume(vol);    }        public function get volume():Number {      return thisVolume;    }
+      if (primaryPlayer) { primaryPlayer.setVolume(vol); }    }        public function get volume():Number {      return thisVolume;    }
     
     public function currentTrack():Song {
       return primaryPlayer;
-    }        private function getByUID(uid:String) {      var hsh, index:int, i:int;      for (i = 0; hsh = this.list[i] ; i++) { if(hsh.id === uid) { index = i; } }      if (index) { return list[index]; }      else { return false; }    }        private function playThis(index:int, pos:int = -1):void {
+    }        private function getByUID(uid) {      var hsh, index:int, i:int;      for (i = 0; hsh = this.list[i] ; i++) { if(hsh.id === uid) { index = i; } }      if (index) { return list[index]; }      else { return false; }    }
+    
+    private function indexByUID(uid):int {
+      var hsh, i:int;
+      for (i = 0; hsh = this.list[i] ; i++) { if(hsh.id === uid) { return i; } }
+      return -1;
+    }        private function playThis(index:int, pos:int = -1):void {
       
       if (currentIndex != index) {
         currentIndex = index;
@@ -60,4 +81,4 @@ package com.jeremynicoll {  import com.jeremynicoll.Song;  import com.jeremyn
       var se:SongEvent = new SongEvent(e.getLabel(), e.attrs.id);
       se.merge(e.attrs);
       dispatchEvent(se);
-    }      }}
+    }  }}

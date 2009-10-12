@@ -175,7 +175,7 @@ SoundOff.Object.prototype = {
   },
   
   dispatchEvent : function (event, obj) {
-    //console.info('Dispatching event: ' + event, obj);
+    console.info('Dispatching event: ' + event, obj);
     var i, e;
     this.events[event] = this.events[event] || [];
     for (i=0; e = this.events[event][i]; i++) { this.bind(e, this)(obj); }

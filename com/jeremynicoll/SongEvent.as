@@ -29,7 +29,7 @@ package com.jeremynicoll {
     
     private var label:String;
     
-    public function SongEvent(label:String, songId:String) {
+    public function SongEvent(label:String, songId) {
       super(label);
       this.label = label;
       attrs.songId = songId;

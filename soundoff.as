@@ -4,9 +4,9 @@ import com.jeremynicoll.SongEvent;
 var controller:SoundOff = new SoundOff();
 var uid;
 
-
-/*controller.addToList('1', 'songs/flying-high.mp3');
-controller.addToList('2', 'songs/suntorise.mp3');
+/*
+controller.addToList(1, 'songs/flying-high.mp3');
+controller.addToList(2, 'songs/suntorise.mp3');
 
 controller.play();
 
@@ -25,7 +25,7 @@ function pauseController(e:Event) {
 var i:int, e:String;
 for (i=0; e = SongEvent.CONSTANTS[i]; i++) { controller.addEventListener(e, sendEvent); }
 
-ExternalInterface.marshallExceptions = true;
+//ExternalInterface.marshallExceptions = true;
 ExternalInterface.addCallback('call', eCall);
 ExternalInterface.addCallback('get', varGet);
 ExternalInterface.addCallback('set', varSet);
@@ -59,11 +59,13 @@ function setUID(newUID):void {
 }
 
 function sendEvent(e:SongEvent):void {
+  try {
+    ExternalInterface.call(
+      'SoundOff.list['+ uid +'].dispatchEvent',
+      e.getLabel(),
+      e.attrs
+    );
+  } catch(e) {}
   
-  ExternalInterface.call(
-    'SoundOff.list['+ uid +'].dispatchEvent',
-    e.getLabel(),
-    e.attrs
-  );
   
 }

@@ -14,11 +14,19 @@
       var volumeSliding = false;
       var muted = false;
       
+      var songBase = 'http://jeremynicoll.com/songs/';
+      
+      var songs = [
+        { title : 'Flying High', fileName : 'flying-high.mp3' },
+        { title : 'Waiting for the Sun to Rise', fileName : 'suntorise.mp3' }
+      ];
+      
       $(function() {
-        var so = new SoundOff.Object();
-        so.addToList('a', 'http://jeremynicoll.com/songs/flying-high.mp3');
-        so.addToList('b', 'songs/suntorise.mp3');
-        so.addToList('c', 'songs/purpledress.mp3');
+        var so = new SoundOff.Object(), i, song;
+        
+        for (i=0; song = songs[i]; i++) {
+          so.addToList(i, songBase + song.fileName);
+        }
         
         so.addListener('songLoad', function(opts) {
           var percent = opts.bytesLoaded / opts.bytesTotal;
@@ -31,6 +39,11 @@
         
         so.addListener('soundStop', function(opts) {
           $('#left-channel, #right-channel').css('height', 0);
+        });
+        
+        so.addListener('songStop', function(opts) {
+          $('#pause').hide();
+          $('#play').show();
         });
         
         so.addListener('songID3', function(opts) {

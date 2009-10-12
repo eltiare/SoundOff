@@ -13,7 +13,7 @@ package com.jeremynicoll {
   import flash.events.TimerEvent;
   
   public class Song extends Sound {
-    public var id:String;
+    public var id; //Allow to be anything, probably best to be a string or number, though.
     public var loadInitialized:Boolean = false;
     
     private var trackPos:int = 0;
@@ -29,8 +29,8 @@ package com.jeremynicoll {
 
     private var loaded:Boolean = false;
     
-    public function Song(uid:String = null, location:String = null):void {
-      if(uid) { id = uid; }
+    public function Song(uid = null, location:String = null):void {
+      if (uid) { id = uid; }
       if(location) {
         this.location = location;
         load(new URLRequest(location));
