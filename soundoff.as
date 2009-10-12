@@ -48,6 +48,4 @@ function sendEvent(e:SongEvent):void {
       e.attrs
     );
   } catch(e) {}
-  
-  
 }

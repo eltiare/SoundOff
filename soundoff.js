@@ -1,6 +1,7 @@
 var SoundOff = {
   swfLocation : 'soundoff.swf',
-  containerID : '_soundOffContainer',
+  containerID : 'soundOffContainer',
+  expressInstallLocation : 'expressInstall.swf',
   container : null,
   list : []
 };
@@ -12,36 +13,20 @@ SoundOff.Object = function() {
     c.style.top = 0;
     c.style.left = 0;
     document.body.appendChild(c);
+    c.style.zIndex = -1;
     SoundOff.container = c;
   }
   
-  // Quick & dirty IE detection
-  var msie = (navigator.appVersion.indexOf("MSie") != -1) && !window.opera;
+  this.thisIndex = SoundOff.list.length;
+  this.swfID = 'SoundOffContainer' + this.thisIndex;
   
-  var fo = document.createElement('object');
-  fo.setAttribute('height', 1);
-  fo.setAttribute('width', 1);
-  fo.style.position = 'absolute';
-  fo.style.top = 0;
-  fo.style.left = 0;
+  var div = document.createElement('div');
+  div.setAttribute('id', this.swfID);
+  SoundOff.container.appendChild(div);
   
-  if (msie) {
-    fo.setAttribute('classid', "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000");
-    var p = document.createElement('param');
-    p.setAttribute('name', 'movie');
-    p.setAttribute('value', SoundOff.swfLocation);
-    fo.appendChild(p);
-  } else {
-    fo.setAttribute('type', "application/x-shockwave-flash");
-    fo.setAttribute('data', SoundOff.swfLocation);
-  }
+  swfobject.embedSWF(SoundOff.swfLocation, this.swfID, "1", "1", "9.0.0", SoundOff.expressInstallLocation);
   
-  
-  SoundOff.container.appendChild(fo);
-  this.flashObj = fo;
   this.initializeTimer = setInterval(this.bind(this.isInitialized, this), 100);
-  SoundOff.list.push(this);
-  this.thisIndex = SoundOff.list.length - 1;
   this.deferredCalls.push(['setUID', this.thisIndex]);
 }
 
@@ -132,6 +117,7 @@ SoundOff.Object.prototype = {
   /* for internal use only */
   isInitialized : function() {
     try {
+      this.flashObj = document.getElementById(this.swfID);
       this.flashObj.initialize();
       this.initialized = true;
       clearInterval(this.initializeTimer);
