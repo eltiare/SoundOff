@@ -4,21 +4,22 @@ import com.jeremynicoll.SongEvent;
 var controller:SoundOff = new SoundOff();
 var uid;
 
-/*controller.addToList('1', 'file:///srv/Merb/jeremy-nicoll/public/songs/bragtime.mp3');
-controller.addToList('2', 'file:///srv/Merb/jeremy-nicoll/public/songs/snowfall.mp3');
-controller.currentIndex = 1;
-//controller.seek(4.35 * 60 * 1000);
+
+controller.addToList('1', 'songs/flying-high.mp3');
+controller.addToList('2', 'songs/suntorise.mp3');
+
 controller.play();
 
-var timer = new Timer(3000, 1);
+
+var timer = new Timer(1000, 1);
 timer.addEventListener(TimerEvent.TIMER, pauseController);
 timer.start();
 
-
 function pauseController(e:Event) {
-  controller.pause();
-  controller.play();
-}*/o
+  controller.seekToPercent(99);
+}
+
+
 
 
 var i:int, e:String;
@@ -58,16 +59,11 @@ function setUID(newUID):void {
 }
 
 function sendEvent(e:SongEvent):void {
-  try {
-    // This craps out sometimes - need to find out why.
-    ExternalInterface.call(
-      'SoundOff.list['+ uid +'].dispatchEvent',
-      e.getLabel(),
-      e.attrs
-    );
-  } catch(err) {
-    var v;
-    for (v in e.attrs) { trace(v + ' : ' + e.attrs[v]); }
-  }
+  
+  ExternalInterface.call(
+    'SoundOff.list['+ uid +'].dispatchEvent',
+    e.getLabel(),
+    e.attrs
+  );
   
 }

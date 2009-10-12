@@ -3,195 +3,270 @@
   <head>
     <title>SoundOff test</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-    <script src="jquery.js"></script>
+    
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="jquery.ui.js"></script>
+
+    <script src="sound_off.js"></script>
+    
     <script type="text/javascript">
-      var SoundOff = {
-        swfLocation : 'soundoff.swf',
-        containerID : '_soundOffContainer',
-        container : null,
-        list : []
-      };
-      
-      SoundOff.Object = function() {
-        if (!SoundOff.container) {
-          var c = document.createElement('div');
-          c.style.position = 'absolute';
-          c.style.top = 0;
-          c.style.left = 0;
-          document.body.appendChild(c);
-          SoundOff.container = c;
-        }
-        
-        fo = document.createElement('object');
-        fo.setAttribute('type', "application/x-shockwave-flash");
-        fo.setAttribute('data', SoundOff.swfLocation);
-        fo.setAttribute('height', 1);
-        fo.setAttribute('width', 1);
-        fo.style.position = 'absolute';
-        fo.style.top = 0;
-        fo.style.left = 0;
-        
-        SoundOff.container.appendChild(fo);
-        this.flashObj = fo;
-        this.initializeTimer = setInterval(this.bind(this.isInitialized, this), 100);
-        SoundOff.list.push(this);
-        this.thisIndex = SoundOff.list.length - 1;
-        this.deferredCalls.push(['setUID', this.thisIndex]);
-      }
-      
-      SoundOff.Object.prototype = {
-        initialized : false,
-        initializeTimer : null,
-        deferredCalls : [],
-        events : {},
-        thisIndex : null,
-        
-        addToList : function(id, filePath) {
-          this.call('addToList', arguments);
-        },
-        
-        removeFromList : function(id) {
-          this.call('removeFromList', arguments);
-        },
-        
-        play : function(pos) {
-          if (arguments[0] === null) { arguments[0] = -1;}
-          this.call('play', arguments);
-        },
-        
-        playNext : function() {
-          this.call('playNext');
-        },
-        
-        playPrev : function() {
-          this.call('playPrev');
-        },
-        
-        stop : function() {
-          this.call('stop');
-        },
-        
-        pause : function() {
-          this.call('pause');
-        },
-        
-        /* for internal use only */
-        call : function() {
-          var methodName = arguments[0];
-          var i, args = [], a, ta;
-          ta = typeof arguments[1] ==  'object' ? arguments[1] : arguments;
-          for (i = typeof arguments[1] ==  'object' ? 0 : 1; a = ta[i]; i++) { args.push(a); }
-          if (this.initialized) {
-            this.flashObj.call(methodName, args);
-          } else {
-            this.deferredCalls.push(['call', methodName, args]);
-          }
-        },
-        
-        /* Use this to set the value of a variable on the player */
-        setVal : function(name, val) {
-          if (this.initialized) {
-            this.flashObj.set(name, val);
-          } else {
-            this.deferredCalls.push('set', name, val);
-          }
-        },
-        
-        /* Use this to get the value of a variable on the player. If the flash
-          player is not initialized, this will return null.
-          The only other solution that I could think of was to freeze the
-          browser with a loop until it became available, but this would be
-          bad if the player never initalized for some reason. */
-        getVal : function(name) {
-          if (this.initialized) {
-            return this.flashObj.get(name);
-          } else {
-            return null;
-          }
-        },
-        
-        /* for internal use only */
-        isInitialized : function() {
-          try {
-            this.flashObj.initialize();
-            this.initialized = true;
-            clearInterval(this.initializeTimer);
-            var i, a;
-            for (var i=0; a = this.deferredCalls[i]; i++ ) {
-              switch(a.length) {
-                case 2:
-                  this[a[0]](a[1]);
-                  break;
-                case 3:
-                  this[a[0]](a[1], a[2]);
-                  break;
-              }
-              
-            }
-          } catch(e) {}
-        },
-        
-        /* for internal use only */
-        bind : function (f, obj) {
-          return function() { return f.apply(obj, arguments); };
-        },
-        
-        /* for internal use only */
-        setUID : function(uid) {
-          this.flashObj.uid(uid);
-        },
-        
-        addEvent : function(event, func) {
-          var i, e;
-          this.events[event] = this.events[event] || [];
-          for (i=0; e = this.events[event][i]; i++) { if (func === e) { return false; } }
-          this.events[event].push(func);
-          return true;
-        },
-        
-        removeEvent : function(event, func) {
-          var i, e;
-          this.events[event] = this.events[event] || [];
-          for (i=0; e = this.events[event][i]; i++) {
-            if (func === e) {
-              this.events[event].splice(i, 1);
-              break;
-            }
-          }
-        },
-        
-        dispatchEvent : function (event, obj) {
-          
-          console.info('Dispatching event: ' + event);
-          console.info(obj);
-          
-          var i, e;
-          this.events[event] = this.events[event] || [];
-          for (i=0; e = this.events[event][i]; i++) { e.apply(this, obj); }
-        }
-      };
-      
+      var sliding = false;
+      var volumeSliding = false;
+      var muted = false;
       
       $(function() {
         var so = new SoundOff.Object();
-        so.addToList('1', 'songs/suntorise.mp3');
-        so.addToList('2', 'songs/purpledress.mp3');
-        so.play();
+        so.addToList('a', 'http://jeremynicoll.com/songs/flying-high.mp3');
+        so.addToList('b', 'songs/suntorise.mp3');
+        so.addToList('c', 'songs/purpledress.mp3');
+        
+        so.addListener('songLoad', function(opts) {
+          var percent = opts.bytesLoaded / opts.bytesTotal;
+          percent = Math.ceil(percent * 100);
+          var p = $('#progress');
+          p.css('width', percent + '%');
+          var s = $('#progress-slider a');
+          $('#progress-slider').css('width', (p[0].offsetWidth - s[0].offsetWidth) + 'px');
+        });
+        
+        so.addListener('soundStop', function(opts) {
+          $('#left-channel, #right-channel').css('height', 0);
+        });
+        
+        so.addListener('songID3', function(opts) {
+          console.info(opts);
+          $('#console').html(opts.TIT2);
+        });
+        
+        so.addListener('songProgress', function(opts) {
+          if (!sliding) {
+            $('#progress-slider').slider('option', 'value', opts.percent);
+          }
+          
+          var lp = Math.ceil(opts.leftPeak * 100 / 11.2) * 11.2;
+          var rp = Math.ceil(opts.rightPeak * 100 / 11.2) * 11.2;
+          $('#left-channel').css('height', lp + '%');
+          $('#right-channel').css('height', rp +  '%');
+        });
         
         $('#playNext').click(function() { so.playNext(); });
         $('#playPrev').click(function() { so.playPrev(); });
-        $('#pause').click(function() { so.pause(); });
-        $('#play').click(function() { so.play();} );
+        
+        $('#volume').slider({
+          max : 1,
+          min : 0,
+          step : 0.01,
+          orientation : 'vertical',
+          value : 0.8,
+          start : function(event, ui) { volumeSliding = true; },
+          change : function(event, ui) {
+            if (volumeSliding) {
+              so.setVal('volume', ui.value);
+              volumeSliding = false;
+            }
+          }
+        });
+        
+        $('#progress-slider').slider({
+          max : 100,
+          min : 0,
+          step : 0.1,
+          orientation : 'horizontal',
+          start : function(event, ui) { sliding = true; },
+          change : function(event, ui) {
+            if (sliding) {
+              so.seekToPercent(ui.value);
+              sliding = false;
+            }
+          }
+        });
+        
+        
+        $('#pause').click(function() {
+          $(this).hide();
+          $('#play').show();
+          so.pause();
+          return false;
+        });
+        
+        $('#play').click(function() {
+          $(this).hide();
+          $('#pause').show();
+          so.play();
+          return false;
+        });
+        
+        $('#stop').click(function() {
+          $('#pause').hide();
+          $('#play').show();
+          so.stop();
+        });
+        
+        $('#mute').click(function() {
+          if (muted) {
+            so.setVal('volume', $('#volume').slider('option', 'value'));
+            $(this).css('background-position', '0 0');
+            muted = false;
+          } else {
+            so.setVal('volume', 0);
+            $(this).css('background-position', '30px 30px');
+            muted = true;
+          }
+          
+        });
         
       });
     </script>
+    
+    <style type="text/css">
+      html, body {
+        padding: 0;
+        margin: 0;
+      }
+      
+      body {
+        font-family: Tahoma sans-serif;
+      }
+      
+      #player {
+        position: relative;
+        background: url(images/player-bg.png) no-repeat;
+        width: 684px;
+        height: 96px;
+      }
+      
+      #play, #pause {
+        position: absolute;
+        width: 46px;
+        height: 46px;
+        top: 22px;
+        left: 15px;
+      }
+      
+      #stop {
+        position: absolute;
+        width: 38px;
+        height: 38px;
+        top: 38px;
+        left: 75px;
+      }
+      
+      #play {
+        background: url(images/play-fg.png) no-repeat 15px 8px;
+      }
+      
+      #pause {
+        background: url(images/pause-fg.png) no-repeat 16px 9px;
+        display: none;
+      }
+      
+      #progress_container {
+        width: 398px;
+        height: 19px;
+        top: 59px;
+        left: 123px;
+        position: absolute;
+      }
+      
+      #progress {
+        width: 0;
+        height: 15px;
+        padding: 2px 0;
+        background: url(images/progress-fg.png) no-repeat;
+        position: relative;
+      }
+      
+      #progress-slider {
+        width: 1px;
+        height: 14px;
+        position: relative;
+      }
+      
+      #console {
+        width: 380px;
+        height: 26px;
+        top: 11px;
+        left: 122px;
+        position: absolute;
+        font-size: 20px;
+        line-height: 30px;
+        padding: 2px 10px;
+      }
+      
+      #volume {
+        width: 16px;
+        height: 52px;
+        position: absolute;
+        top: 26px;
+        left: 530px;
+      }
+      
+      .button a {
+        display: block;
+        width: 100%;
+        height: 100%;
+        opacity: .01;
+        background: #ffffff;
+      }
+      
+      #volume a, #progress-slider a {
+        display: block;
+        position: absolute;
+        background: url(images/knob.png) no-repeat;
+        height: 15px;
+        width: 15px;
+      }
+      
+      #mute {
+        position: absolute;
+        background: url(images/soundwaves.png) no-repeat;
+        width: 46px;
+        height: 34px;
+        top: 60px;
+        left: 542.5px;
+      }
+      
+      #volume-indicator {
+        top: 14px;
+        left: 590px;
+        position: absolute;
+        height: 63px;
+        width: 42px;
+      }
+      
+      #left-channel, #right-channel {
+        background: url(images/volume-fg.png) no-repeat;
+        background-position: bottom left;
+        position: absolute;
+        bottom: 0;
+        height: 0;
+        width: 18px;
+      }
+      
+      #left-channel {
+        left: 0;
+      }
+      
+      #right-channel {
+        left: 22px;
+      }
+    </style>
   </head>
   <body>
-    <div>
-      <button id="pause">Pause</button>
-      <button id="play">Play</button>
-      <button id="playPrev">Play Previous</button>
-      <button id="playNext">Play Next</button>
+    <div id="player">
+      <div id="play" class="button"><a href="#"></a></div>
+      <div id="pause" class="button"><a href="#"></a></div>
+      <div id="stop" class="button"><a href="#"></a></div>
+      <div id="progress_container"><div id="progress">
+        <div id="progress-slider"></div>
+      </div></div>
+      <div id="console"></div>
+      <div id="volume"></div>
+      <div id="volume-indicator">
+        <div id="left-channel"></div>
+        <div id="right-channel"></div>
+      </div>
+      <div id="mute"></div>
     </div>
   </body>
 </html>

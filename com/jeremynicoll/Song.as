@@ -12,10 +12,6 @@ package com.jeremynicoll {
   import flash.events.ProgressEvent;
   import flash.events.TimerEvent;
   
-  
-  
-
-  
   public class Song extends Sound {
     public var id:String;
     public var loadInitialized:Boolean = false;
@@ -40,7 +36,7 @@ package com.jeremynicoll {
         load(new URLRequest(location));
         loadInitialized = true;
       }
-      progressTimer = new Timer(250);
+      progressTimer = new Timer(100);
       progressTimer.addEventListener(TimerEvent.TIMER, sendProgress);
       progressTimer.start();
     }
@@ -48,6 +44,12 @@ package com.jeremynicoll {
     public function seek(pos:int):void {
       trackPos = pos;
       if (this.isPlaying) { play(pos); }
+    }
+    
+    public function seekToPercent(percent:Number) {
+      trackPos = length * (percent / 100.0);
+      trace('Seeking to: ' + trackPos)
+      if (this.isPlaying) { play(trackPos); }
     }
     
     public override function play(newPos:Number = 0, loops:int = 0, transform:SoundTransform = null):SoundChannel {
@@ -117,6 +119,8 @@ package com.jeremynicoll {
     }
     
     private function songComplete(e:Event) {
+      trace("Song finished!");
+      isPlaying = false;
       sendEvent(SongEvent.COMPLETE);
     }
     
@@ -134,25 +138,31 @@ package com.jeremynicoll {
     }
     
     private function sendProgress(e:TimerEvent):void {
-      if (!loaded) {
+      
+      if (loadInitialized && !loaded && bytesTotal > 0) {
         sendEvent(SongEvent.LOAD, {
           bytesLoaded : bytesLoaded,
           bytesTotal : bytesTotal
         });
         if (bytesLoaded >= bytesTotal) { loaded = true; }
       }
+      
       if (isPlaying) {
+        trace(soundChannel.position, length);
         sendEvent(SongEvent.PROGRESS, {
           leftPeak    : soundChannel.leftPeak,
           rightPeak   : soundChannel.rightPeak,
           position    : soundChannel.position,
-          length      : this.length,
-          isBuffering : this.isBuffering
+          length      : length,
+          isBuffering : isBuffering,
+          percent     : length ? (soundChannel.position / length) * 100 : 0
         });
       }
     }
     
     public function sendID3(e:Event = null):void {
+      var o = [], v;
+      for (v in id3) { o[v] = id3[v];}
       sendEvent(SongEvent.ID3, this.id3);
     }
     
