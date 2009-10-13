@@ -18,6 +18,7 @@ SoundOff.Object = function() {
   }
   
   this.thisIndex = SoundOff.list.length;
+  SoundOff.list.push(this);
   this.swfID = 'SoundOffContainer' + this.thisIndex;
   
   var div = document.createElement('div');
@@ -26,8 +27,8 @@ SoundOff.Object = function() {
   
   swfobject.embedSWF(SoundOff.swfLocation, this.swfID, "1", "1", "9.0.0", SoundOff.expressInstallLocation);
   
-  this.initializeTimer = setInterval(this.bind(this.isInitialized, this), 100);
   this.deferredCalls.push(['setUID', this.thisIndex]);
+  this.initializeTimer = setInterval(this.bind(this.isInitialized, this), 100);
 }
 
 SoundOff.Object.prototype = {
@@ -166,7 +167,7 @@ SoundOff.Object.prototype = {
   },
   
   dispatchEvent : function (event, obj) {
-    //console.info('Dispatching event: ' + event, obj);
+//    console.info('Dispatching event: ' + event, obj);
     var i, e;
     this.events[event] = this.events[event] || [];
     for (i=0; e = this.events[event][i]; i++) { this.bind(e, this)(obj); }

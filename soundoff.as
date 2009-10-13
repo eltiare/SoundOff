@@ -12,9 +12,7 @@ ExternalInterface.addCallback('call', eCall);
 ExternalInterface.addCallback('get', varGet);
 ExternalInterface.addCallback('set', varSet);
 ExternalInterface.addCallback('uid', setUID);
-
 ExternalInterface.addCallback('initialize', initialize);
-
 
 function initialize():Boolean {
   return true;
@@ -41,11 +39,11 @@ function setUID(newUID):void {
 }
 
 function sendEvent(e:SongEvent):void {
-  try {
+  //try {
     ExternalInterface.call(
       'SoundOff.list['+ uid +'].dispatchEvent',
       e.getLabel(),
       e.attrs
     );
-  } catch(e) {}
+  //} catch(e) {}
 }
